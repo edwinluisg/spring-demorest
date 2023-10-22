@@ -1,7 +1,9 @@
 package com.example.demorest.service;
 
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +25,7 @@ public class CategoryServiceImpl implements ICategoryService{
 	@Autowired
 	private ICategoryDao categoryDao;
 	
-
+	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<CategoryResponseRest> searchCategories() {
 		log.info("init searchCategories");
@@ -32,6 +34,31 @@ public class CategoryServiceImpl implements ICategoryService{
 			List<Category> category = (List<Category>) categoryDao.findAll();
 			response.getCategoriesResponse().setCategories(category);
 			response.setMetadata("Response OK", "00", "Response success");
+		} catch (Exception e) {
+			response.setMetadata("Response NO", "-1", "Response error");
+			log.error("Error in searchCategories:", e.getMessage());
+			e.getStackTrace();
+			return new ResponseEntity<CategoryResponseRest>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		return new ResponseEntity<CategoryResponseRest>(response,HttpStatus.OK);
+	}
+
+
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<CategoryResponseRest> searchCategoriesId(Long id) {
+		log.info("init searchCategoriesId");
+		CategoryResponseRest response = new CategoryResponseRest();
+		List<Category> list = new ArrayList<>();
+		try {
+			Optional<Category> category = categoryDao.findById(id);
+			if (category.isPresent()) {
+				list.add(category.get());
+				response.getCategoriesResponse().setCategories(list);
+			} else {
+				response.setMetadata("Response NO", "-1", "Category not found");
+				return new ResponseEntity<CategoryResponseRest>(response,HttpStatus.NOT_FOUND);
+			}
 		} catch (Exception e) {
 			response.setMetadata("Response NO", "-1", "Response error");
 			log.error("Error in searchCategories:", e.getMessage());
